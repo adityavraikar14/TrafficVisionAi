@@ -133,11 +133,23 @@
 
 ---
 
-## 8. Stunt Riding — "The one we're proud of for a different reason"
+## 8. Stunt Riding + Instant Replay — "The one we're proud of for a different reason"
 
-*[If you have time/a wheelie photo loaded — otherwise mention it verbally.]*
+*[Upload sample_images/stunt-video.mp4 on the Wrong-Side Driving page — yes, the same video pipeline does both checks in one pass.]*
 
-> "One more thing — stunt and wheelie detection. We didn't have a labeled dataset to train a classifier for this, so instead of faking it, we built a real geometric signal: when the dominant motorcycle in frame has an unusually tall, narrow silhouette *and* fills a large portion of the image — which is exactly what a close-up wheelie photo looks like — it gets flagged. We validated this against every other photo in our test set first, with zero false positives, and we report it at a deliberately capped confidence, because it's a candidate for officer review, not an auto-confirmed violation. We'd rather be honest about what's a heuristic and what's a trained model than oversell it."
+> "One more thing — stunt and wheelie detection. We didn't have a labeled dataset to train a classifier for this, so instead of faking it, we built a real geometric signal: a wheelie tilts the bike back and lifts the front wheel, which makes its bounding box noticeably taller and narrower than normal riding."
+
+> "On a single photo, that's all we have to go on, so we also require the bike to dominate the frame — a close-up shot — and we report it at a deliberately capped, sub-acceptance confidence, because one frame alone shouldn't make the final call."
+
+> "But video gives us something a photo never can: *time*. We tested this against real footage — actual news coverage of a Hyderabad stunt-riding arrest — and found the frame-dominance rule never fires on video, because real footage is shot from much further away. So for video, we use a stronger signal instead: the aspect ratio has to hold for *multiple consecutive sampled frames in a row*. A single odd-angle frame is noise — we proved that directly, an isolated one-frame false read in this exact footage got filtered out automatically. A wheelie sustained for a second or more is real."
+
+*[Let the result load — point at the violation card.]*
+
+> "And here's the part that actually answers the question every officer would ask: 'how do I know the AI didn't just imagine this?' Watch — instead of one annotated still frame, the system clips the real 6-to-10 seconds of footage around the moment it detected, using ffmpeg, frame-accurate, from the actual uploaded video. This is Instant Replay."
+
+*[Click into the violation in Evidence Center — the player loads.]*
+
+> "The officer doesn't take our word for it. They scrub through the actual clip themselves, exactly like reviewing dashcam footage, before they decide Verify or Reject. We're not asking anyone to trust a confidence score — we're showing them the moment."
 
 ---
 
@@ -151,9 +163,52 @@
 
 ## 10. Closing
 
-> "So to recap what you just watched: a real preprocessing pipeline that adapts per-image, multiple specialized detection models instead of one generic one, three-tier plate recognition with classical CV fallbacks, pose-based false-positive filtering, real multi-frame video tracking for wrong-side driving, a full officer-review workflow with a permanent audit trail, automatic repeat-offender detection, and auto-generated e-challans with QR verification — all backed by a real database, not mock JSON. From a single photo to an officer-signed digital challan. That's TrafficVision AI."
+> "So to recap what you just watched: a real preprocessing pipeline that adapts per-image, five specialized detection models instead of one generic one, three-tier plate recognition with classical CV fallbacks, pose-based false-positive filtering, real multi-frame video tracking for both wrong-side driving and stunt detection, Instant Replay clips so an officer reviews actual footage instead of a single frame, a full officer-review workflow with a permanent audit trail, automatic repeat-offender detection, and auto-generated e-challans with QR verification — all backed by a real database, not mock JSON, and all of it actually deployed and live right now, not running off my laptop. From a single photo to an officer-signed digital challan. That's TrafficVision AI."
 
 *[Beat. Let it land. Don't keep talking after this line.]*
+
+---
+
+## Tech Stack — say this if a judge asks "what did you actually build this with?"
+
+**Frontend**
+- **React 19 + TypeScript** — the whole console UI
+- **Vite** — build tooling
+- **Tailwind CSS v4** — every page's styling, custom design tokens (no UI kit)
+- **React Router v7** — client-side routing, with the auth-gate (`ProtectedRoute`) wrapping every page except Login
+- **Axios** — API client, with interceptors that attach the officer's auth token to every request and auto-redirect to login on a 401
+- **Recharts** — Dashboard/Analytics charts (pie, bar, line)
+- **React-Leaflet + Leaflet** — the live India risk map
+- **Framer Motion** — card entrance animations
+- **Lucide React** — icon set
+
+**Backend**
+- **FastAPI** (Python) — the entire API
+- **Uvicorn** — ASGI server
+- **SQLite** — the database. No ORM, raw SQL, on purpose — small enough to be transparent, real enough to persist everything (violations, review audit log, repeat-offender aggregates)
+- **Pydantic** — request/response schemas
+
+**Computer Vision / ML — five separate models, not one**
+- **Ultralytics YOLOv8** trained/fine-tuned for: helmet compliance (`helmet_best.pt`), license plates (`plate-best.pt`); stock `yolov8s.pt` for general vehicle/pedestrian detection; `yolov8n-pose.pt` for the rider-posture check that filters out bystanders from triple-riding counts
+- **EasyOCR** — plate text recognition, gated by a confidence threshold + a regex match against the real Indian plate format before any read is accepted
+- **OpenCV** — every classical-CV piece: CLAHE low-light correction, Wiener deconvolution for motion blur, Canny edge detection and brightness-threshold contour detection (the two independent plate-localization fallbacks), rain-streak morphological filtering
+- **ByteTrack** (via Ultralytics' built-in tracker) — multi-object tracking across video frames, used for both Wrong-Side Driving and the stunt-detection temporal-persistence check
+- **NumPy** — the underlying array math for all of the above
+
+**Video & Document Generation**
+- **ffmpeg** (subprocess) — Instant Replay: frame-accurate clip extraction, re-encoded to browser-playable H.264/AAC regardless of the source video's original codec
+- **ReportLab** — generates the actual e-challan PDF (not a template screenshot — real generated text, embedded evidence image, layout)
+- **qrcode** — the scannable verification QR code embedded in every challan
+
+**Auth**
+- Built from scratch, not a third-party auth provider — a login endpoint, an in-memory session token, and a `require_officer` dependency gating every state-changing endpoint (review decisions, status updates)
+
+**DevOps & Deployment — this is genuinely live, not a localhost demo**
+- **Docker** — the backend is fully containerized
+- **Hugging Face Spaces** — backend hosting, free CPU tier
+- **Vercel** — frontend hosting, auto-redeploys on every GitHub push
+- **Git LFS** — tracks every model weight, sample image, and sample video so the repo itself stays clean
+- **GitHub** — single source of truth feeding both deploy targets
 
 ---
 
@@ -166,8 +221,10 @@
 | Plate OCR | Real — trained detector → edge-CV fallback → brightness-CV fallback → EasyOCR with confidence + regex gating |
 | Wrong-Side Driving | Real — ByteTrack multi-frame tracking, angle math against operator-marked direction |
 | Stop-Line / Red-Light / Parking | Real geometry checks against operator-calibrated zones (same pattern real installed cameras use — one-time per-camera setup) |
-| Stunt Riding | A real geometric heuristic (aspect ratio + frame dominance), not a trained model — explicitly capped confidence, framed as officer-review candidate |
+| Stunt Riding (photo) | A real geometric heuristic (aspect ratio + frame dominance), not a trained model — explicitly capped confidence, framed as officer-review candidate |
+| Stunt Riding (video) + Instant Replay | Real — temporal persistence across consecutive ByteTrack-sampled frames, real ffmpeg clip extraction from the actual uploaded footage, not a generated/faked video |
 | Repeat Offender | Real live SQL aggregate on plate number, not mocked |
-| E-Challan | Real PDF generation with embedded evidence image + QR code |
+| E-Challan | Real PDF generation (ReportLab) with embedded evidence image + real QR code (qrcode lib) |
 | Officer Review / Audit Trail | Real — persisted to SQLite, every decision logged with officer identity + timestamp |
 | Seatbelt detection | Honestly not shipped — documented limitation, not faked |
+| Deployment | Real — Docker container on Hugging Face Spaces (backend) + Vercel (frontend), not running off a laptop |
