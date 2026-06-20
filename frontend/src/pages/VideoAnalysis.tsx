@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { UploadCloud, ScanSearch, Navigation, Car } from "lucide-react";
+import { UploadCloud, ScanSearch, Navigation, Car, PlayCircle } from "lucide-react";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Kpi from "../components/Kpi";
@@ -165,7 +165,16 @@ export default function VideoAnalysis() {
                       <span className="font-black text-tv-text text-sm">{v.violation_id}</span>
                       <span className="text-tv-muted text-xs">Recorded — see Evidence Center to review</span>
                     </div>
-                    <img src={mediaUrl(v.annotated_image_path)} className="rounded-xl w-full max-h-[360px] object-contain mb-3" />
+                    {v.evidence_video_path ? (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-1.5 text-tv-violation text-[11px] font-bold mb-1.5">
+                          <PlayCircle size={14} /> Instant Replay
+                        </div>
+                        <video src={mediaUrl(v.evidence_video_path)} controls loop className="rounded-xl w-full max-h-[360px] bg-black" />
+                      </div>
+                    ) : (
+                      <img src={mediaUrl(v.annotated_image_path)} className="rounded-xl w-full max-h-[360px] object-contain mb-3" />
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="font-black text-tv-text text-sm">Vehicle Number</div>

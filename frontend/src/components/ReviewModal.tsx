@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ShieldCheck, ShieldX, FileDown } from "lucide-react";
+import { X, ShieldCheck, ShieldX, FileDown, PlayCircle } from "lucide-react";
 import { submitReview, challanUrl, mediaUrl, type Violation } from "../api/client";
 import { Chip, StatusChip, formatConfidence } from "./Chip";
 
@@ -66,6 +66,25 @@ export default function ReviewModal({ violation, onClose, onDone }: Props) {
             </button>
           </div>
         </div>
+
+        {violation.evidence_video_path && (
+          <div className="mt-5 rounded-2xl border-2 border-tv-violation/40 bg-gradient-to-br from-tv-violation/5 to-transparent p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <PlayCircle size={20} className="text-tv-violation" />
+              <span className="font-black text-tv-text text-[15px]">Instant Replay</span>
+              <span className="text-[11px] font-bold text-tv-muted">— the actual moment, not just a single frame</span>
+            </div>
+            <video
+              src={mediaUrl(violation.evidence_video_path)}
+              controls
+              loop
+              className="w-full rounded-xl border border-tv-border max-h-[420px] bg-black"
+            />
+            <p className="text-tv-muted text-xs mt-2">
+              A short clip the AI flagged from the uploaded footage — scrub through it yourself before deciding, the same way you'd review dashcam evidence.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
           <div>

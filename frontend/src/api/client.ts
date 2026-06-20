@@ -50,6 +50,7 @@ export interface Violation {
   lon: number | null;
   original_image_path: string | null;
   annotated_image_path: string | null;
+  evidence_video_path?: string | null;
   source: string;
   created_at: string;
   repeat_count?: number;

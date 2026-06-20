@@ -19,6 +19,7 @@ def create_violation_record(
     original_image_path: str | None,
     annotated_image_path: str | None,
     source: str = "upload",
+    evidence_video_path: str | None = None,
 ) -> dict:
     city = random.choice(CITY_SEED)
     with get_conn() as conn:
@@ -29,8 +30,8 @@ def create_violation_record(
             INSERT INTO violations (
                 violation_id, vehicle_number, violation_type, confidence, status,
                 city, location, lat, lon, original_image_path, annotated_image_path,
-                source, created_at
-            ) VALUES (?, ?, ?, ?, 'Pending Review', ?, ?, ?, ?, ?, ?, ?, ?)
+                evidence_video_path, source, created_at
+            ) VALUES (?, ?, ?, ?, 'Pending Review', ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 violation_id,
@@ -43,6 +44,7 @@ def create_violation_record(
                 city["lon"],
                 original_image_path,
                 annotated_image_path,
+                evidence_video_path,
                 source,
                 created_at,
             ),

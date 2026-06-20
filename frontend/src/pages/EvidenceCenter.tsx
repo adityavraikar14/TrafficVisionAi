@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, FolderSearch, Hourglass, BadgeCheck, Target, ShieldX } from "lucide-react";
+import { Search, FolderSearch, Hourglass, BadgeCheck, Target, ShieldX, PlayCircle } from "lucide-react";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Kpi from "../components/Kpi";
@@ -88,7 +88,16 @@ export default function EvidenceCenter() {
                         {(r.repeat_count ?? 0) >= 2 && <Chip text={`🔁 Repeat ×${r.repeat_count}`} variant="orange" />}
                       </div>
                     </td>
-                    <td className="py-2.5 pr-4 text-tv-muted">{r.violation_type}</td>
+                    <td className="py-2.5 pr-4 text-tv-muted">
+                      <div className="flex items-center gap-2">
+                        <span>{r.violation_type}</span>
+                        {r.evidence_video_path && (
+                          <span title="Instant Replay available" className="inline-flex items-center gap-1 text-tv-violation text-[11px] font-bold">
+                            <PlayCircle size={13} /> Replay
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2.5 pr-4 text-tv-muted">{formatConfidence(r.confidence)}</td>
                     <td className="py-2.5 pr-4 text-tv-muted">{r.city}</td>
                     <td className="py-2.5 pr-4 text-tv-muted">{new Date(r.created_at).toLocaleString()}</td>

@@ -14,6 +14,7 @@ class ViolationOut(BaseModel):
     lon: float | None
     original_image_path: str | None
     annotated_image_path: str | None
+    evidence_video_path: str | None = None
     source: str
     created_at: str
 

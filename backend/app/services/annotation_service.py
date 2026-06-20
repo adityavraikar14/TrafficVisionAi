@@ -125,6 +125,19 @@ def draw_annotations(
     return out
 
 
+def draw_stunt_evidence(frame_bgr: np.ndarray, box: list, reported_confidence: float) -> np.ndarray:
+    """Cover-frame for a video-detected stunt event: the highest-confidence
+    frame in the event, with the flagged motorcycle boxed and labeled with
+    the same capped, sub-acceptance confidence reported on the violation
+    record — not the underlying motorcycle-detection confidence, which
+    would misleadingly overstate how certain the *stunt* call itself is."""
+    out = frame_bgr.copy()
+    h, w = out.shape[:2]
+    scale = _annotation_scale(h, w)
+    _draw_box(out, box, COLOR_VIOLATION, f"Stunt Riding {reported_confidence*100:.0f}%", scale)
+    return out
+
+
 def draw_wrong_side_evidence(
     frame_bgr: np.ndarray,
     violation: dict,

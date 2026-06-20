@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS violations (
     lon REAL,
     original_image_path TEXT,
     annotated_image_path TEXT,
+    evidence_video_path TEXT,
     source TEXT NOT NULL DEFAULT 'upload',
     created_at TEXT NOT NULL
 );
@@ -46,9 +47,18 @@ def get_conn():
         conn.close()
 
 
+def _migrate(conn) -> None:
+    """ADD COLUMN for tables that already existed before this column was
+    introduced — CREATE TABLE IF NOT EXISTS alone won't touch them."""
+    existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(violations)")}
+    if "evidence_video_path" not in existing_cols:
+        conn.execute("ALTER TABLE violations ADD COLUMN evidence_video_path TEXT")
+
+
 def init_db() -> None:
     with get_conn() as conn:
         conn.executescript(SCHEMA)
+        _migrate(conn)
         count = conn.execute("SELECT COUNT(*) AS c FROM violations").fetchone()["c"]
         if count == 0 and SEED_DEMO_DATA:
             _seed_demo_data(conn)
