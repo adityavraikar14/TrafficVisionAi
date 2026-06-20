@@ -1,19 +1,25 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   ScanSearch,
+  Car,
   FolderSearch,
+  History,
   BarChart3,
   Map,
   FileText,
   Rocket,
   Info,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
   { to: "/", label: "Executive Dashboard", icon: LayoutDashboard },
   { to: "/analyze", label: "Live Detection", icon: ScanSearch },
+  { to: "/video-analysis", label: "Wrong-Side Driving", icon: Car },
   { to: "/evidence", label: "Evidence Center", icon: FolderSearch },
+  { to: "/history", label: "Review History", icon: History },
   { to: "/analytics", label: "Analytics & Insights", icon: BarChart3 },
   { to: "/map", label: "Smart City Map", icon: Map },
   { to: "/reports", label: "Reports", icon: FileText },
@@ -22,6 +28,14 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar() {
+  const { officerName, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <aside className="w-[260px] shrink-0 h-screen sticky top-0 bg-tv-sidebar border-r border-tv-border flex flex-col">
       <div className="flex items-center gap-3 px-4 py-5">
@@ -29,7 +43,7 @@ export default function Sidebar() {
           🚦
         </div>
         <div>
-          <div className="font-black text-[15px] text-white leading-tight">TrafficVision AI</div>
+          <div className="font-black text-[15px] text-tv-text leading-tight">TrafficVision AI</div>
           <div className="text-[11px] text-tv-muted leading-tight mt-0.5">Smart-city enforcement console</div>
         </div>
       </div>
@@ -49,10 +63,18 @@ export default function Sidebar() {
       </nav>
       <div className="p-4">
         <div className="tv-card px-3 py-3">
-          <div className="text-[12px] font-bold text-white">System Status</div>
-          <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-tv-muted">
-            <span className="w-2 h-2 rounded-full bg-tv-success tv-status-pulse" />
-            Backend Online
+          <div className="text-[12px] font-bold text-tv-text">{officerName ?? "Officer"}</div>
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-tv-muted">
+              <span className="w-2 h-2 rounded-full bg-tv-success tv-status-pulse" />
+              Backend Online
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1 text-[11px] font-bold text-tv-muted hover:text-tv-violation transition"
+            >
+              <LogOut size={13} /> Logout
+            </button>
           </div>
         </div>
       </div>

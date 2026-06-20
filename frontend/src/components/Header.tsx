@@ -8,12 +8,12 @@ export default function Header({ title, subtitle }: Props) {
     <div className="sticky top-0 z-30 -mx-6 -mt-6 px-6 pt-6 pb-4 backdrop-blur-xl bg-tv-bg/85 border-b border-tv-border">
       <div className="tv-card flex items-center justify-between gap-4 px-5 py-4 flex-wrap">
         <div className="flex items-center gap-4 min-w-[260px]">
-          <div className="w-11 h-11 rounded-2xl bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.36),rgba(251,191,36,0.08))] border border-tv-primary/35 flex items-center justify-center text-xl shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-[radial-gradient(circle_at_30%_20%,rgba(37,99,235,0.22),rgba(37,99,235,0.06))] border border-tv-primary/35 flex items-center justify-center text-xl shrink-0">
             🚦
           </div>
           <div>
             <span className="tv-pill">From Detection to Digital Evidence</span>
-            <div className="mt-1.5 text-[28px] font-black tracking-tight text-white">{title}</div>
+            <div className="mt-1.5 text-[28px] font-black tracking-tight text-tv-text">{title}</div>
             <div className="text-tv-muted text-sm font-semibold mt-0.5">{subtitle}</div>
           </div>
         </div>

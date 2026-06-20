@@ -10,6 +10,7 @@ from app.services.detection_service import run_helmet_detection, run_general_det
 from app.services.preprocessing_service import enhance_image
 from app.services.ocr_service import extract_vehicle_number
 from app.services.triple_riding_service import detect_triple_riding
+from app.services.stunt_service import detect_stunt_riding
 from app.services.vehicle_service import classify_frame
 from app.services.pose_service import get_postures
 from app.services.annotation_service import draw_annotations
@@ -69,7 +70,8 @@ async def detect_image(
         postures = get_postures(pose_results)
 
     triple_hits = detect_triple_riding(vehicle_summary["detections"], postures)
-    vehicle_number, plate_box = extract_vehicle_number(enhanced_bgr)
+    stunt_hits = detect_stunt_riding(vehicle_summary["detections"], w, h)
+    vehicle_number, plate_box = extract_vehicle_number(original_bgr, detection_image=enhanced_bgr)
 
     helmet_boxes = []
     violations_payload = []
@@ -106,6 +108,17 @@ async def detect_image(
         record = create_violation_record(
             vehicle_number=vehicle_number,
             violation_type="Triple Riding",
+            confidence=hit["confidence"],
+            original_image_path=f"/storage/uploads/{original_name}",
+            annotated_image_path=f"/storage/evidence/{annotated_name}",
+            source="upload",
+        )
+        violations_payload.append(record)
+
+    for hit in stunt_hits:
+        record = create_violation_record(
+            vehicle_number=vehicle_number,
+            violation_type="Stunt Riding",
             confidence=hit["confidence"],
             original_image_path=f"/storage/uploads/{original_name}",
             annotated_image_path=f"/storage/evidence/{annotated_name}",
@@ -151,6 +164,7 @@ async def detect_image(
         original_bgr,
         helmet_boxes=helmet_boxes,
         triple_riding_hits=triple_hits,
+        stunt_hits=stunt_hits,
         vehicle_detections=vehicle_summary["detections"],
         plate_box=plate_box,
         signal_hits=signal_hits,

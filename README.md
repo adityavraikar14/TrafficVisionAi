@@ -1,3 +1,12 @@
+---
+title: TrafficVision AI
+emoji: 🚦
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
+
 # TrafficVision AI
 
 **From Detection to Digital Evidence**
@@ -90,11 +99,14 @@ Detection** page adds real records on top of that seed data.
 | Triple riding | Real — rule-based box geometry + pose-based seated/standing check, no training needed |
 | Stop-line / red-light violation | Real, operator-calibrated per camera (stop-line position + signal state set per upload) |
 | Illegal parking | Real, operator-calibrated restricted zone (single-image overlap check, not video dwell-time) |
-| License plate detection + OCR | Real — classical-CV plate region localization + EasyOCR, falls back to a fixed crop if no candidate region is found |
+| Wrong-side driving | Real — the one violation that genuinely needs video (direction of travel isn't recoverable from a single frame). Multi-frame ByteTrack tracking + direction-vs-marked-correct-angle comparison. `/video-analysis` page, max 60s clips |
+| License plate detection | Real — trained YOLOv8 detector (`models/plate-best.pt`, 98.6% precision / 94.6% recall / 97% mAP50 on its validation split), falls back to classical-CV region localization if the model finds nothing |
+| License plate OCR | Real — EasyOCR + regex validation on the detected plate region |
 | Evidence generation (annotated image + metadata) | Real, SQLite-backed |
 | Analytics, trends, CSV export | Real |
-| Performance evaluation (Precision/Recall/F1/mAP) | Real — see `reports/helmet_model_metrics.json`, regenerate via `scripts/evaluate_helmet_model.py` |
-| Seatbelt non-compliance, wrong-side driving | Not implemented — seatbelt needs a trained classifier (no dataset yet), wrong-side needs multi-frame tracking (single images can't show direction of travel). See the **Future Scope** page in the app. |
+| Performance evaluation (Precision/Recall/F1/mAP + latency) | Real for all 4 active models — see `reports/*.json`, regenerate via `scripts/evaluate_*.py` |
+| Seatbelt non-compliance | **Not implemented** — trained a classifier, then a detector, on 5+ public datasets; every one is captured from in-cabin driver-facing cameras (fleet-monitoring use case), which doesn't transfer to our exterior-camera pipeline. Confirmed via direct testing (model confidently mis-classified all 3 real test cases), not assumed. A genuinely hard, recognized problem in the field (windshield glare/angle/tint) — see **Future Scope** in the app |
+| Auto-rickshaw / Indian vehicle classes | Not implemented — deferred, needs a custom-labeled dataset (not in COCO's 80 classes) |
 
 ## Next steps (training)
 
@@ -102,7 +114,10 @@ The helmet model should be retrained on Colab GPU using the existing
 `datasets/helmet_yolo` split (prepared by `scripts/prepare_dataset.py`)
 on more varied, real-world street scenes — current validation metrics
 (97% mAP50) are strong on held-out data from the same distribution, but
-the model under-detects on busier, more cluttered street photos. A
-plate-detector model needs a new annotated dataset (none exists yet)
-before the classical-CV localization can be replaced with a trained
-detection box.
+the model under-detects on busier, more cluttered street photos.
+
+Seatbelt and auto-rickshaw detection both need a dataset that doesn't
+appear to exist publicly yet (exterior, third-person vehicle photos —
+not in-cabin crops, and not COCO's 80 classes, respectively). Either
+would need custom data collection/labeling before a training cycle
+could start.

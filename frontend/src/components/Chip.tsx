@@ -1,4 +1,4 @@
-type Variant = "red" | "green" | "yellow" | "orange" | "blue";
+type Variant = "red" | "green" | "yellow" | "orange" | "blue" | "gray";
 
 export function Chip({ text, variant }: { text: string; variant: Variant }) {
   return <span className={`tv-chip tv-chip--${variant}`}>{text}</span>;
@@ -7,7 +7,8 @@ export function Chip({ text, variant }: { text: string; variant: Variant }) {
 export function StatusChip({ status }: { status: string }) {
   const s = status.toLowerCase();
   let variant: Variant = "blue";
-  if (s.includes("pending")) variant = "red";
+  if (s.includes("rejected")) variant = "gray";
+  else if (s.includes("pending")) variant = "red";
   else if (s.includes("verified") || s.includes("reviewed")) variant = "green";
   else if (s.includes("escalated")) variant = "orange";
   return <Chip text={`● ${status}`} variant={variant} />;

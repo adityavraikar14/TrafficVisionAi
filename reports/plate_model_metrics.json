@@ -1,0 +1,10 @@
+{
+  "note": "Trained on Kaggle dataset 'barkataliarbab/license-plate-detection-dataset-10125-images' via Colab GPU. Metrics reported directly from the training run's validation split (2195 plate instances) — not independently re-measured locally, since the raw dataset was not downloaded to this machine.",
+  "precision": 0.9858,
+  "recall": 0.9459,
+  "f1_score": 0.9655,
+  "map50": 0.97,
+  "map50_95": 0.6894,
+  "validation_instances": 2195,
+  "real_world_spot_check": "Confirmed functionally correct on a clean synthetic plate (77% confidence, accurate box, OCR read 9/10 characters correctly). Did not detect a plate in a real low-resolution distant motorcycle photo (sample_images/test.jpg) — same image also failed under the prior classical-CV-only approach, so this is a pre-existing image-resolution limit, not a regression."
+}

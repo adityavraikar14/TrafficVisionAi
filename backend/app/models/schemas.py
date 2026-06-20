@@ -22,6 +22,18 @@ class StatusUpdate(BaseModel):
     status: str
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class ReviewSubmission(BaseModel):
+    decision: str
+    officer_name: str
+    officer_badge_id: str
+    notes: str | None = None
+
+
 class DetectionResponse(BaseModel):
     vehicle_number: str
     violations: list[ViolationOut]

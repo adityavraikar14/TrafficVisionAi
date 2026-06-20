@@ -22,6 +22,16 @@ CREATE TABLE IF NOT EXISTS violations (
     source TEXT NOT NULL DEFAULT 'upload',
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS review_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    violation_id TEXT NOT NULL,
+    decision TEXT NOT NULL,
+    officer_name TEXT NOT NULL,
+    officer_badge_id TEXT NOT NULL,
+    notes TEXT,
+    reviewed_at TEXT NOT NULL
+);
 """
 
 
@@ -38,7 +48,7 @@ def get_conn():
 
 def init_db() -> None:
     with get_conn() as conn:
-        conn.execute(SCHEMA)
+        conn.executescript(SCHEMA)
         count = conn.execute("SELECT COUNT(*) AS c FROM violations").fetchone()["c"]
         if count == 0 and SEED_DEMO_DATA:
             _seed_demo_data(conn)

@@ -12,7 +12,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { AlertTriangle, Car, ShieldCheck, ClipboardList, Camera, FileCheck2 } from "lucide-react";
+import { AlertTriangle, Car, ShieldCheck, ClipboardList, Camera, FileCheck2, ShieldX } from "lucide-react";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Kpi from "../components/Kpi";
@@ -51,7 +51,7 @@ export default function Dashboard() {
     <Layout title="🚦 TrafficVision AI" subtitle="From Detection to Digital Evidence">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-xl font-black text-white">Executive Dashboard</div>
+          <div className="text-xl font-black text-tv-text">Executive Dashboard</div>
           <p className="text-tv-muted text-sm mt-1">Real-time traffic enforcement posture across the smart-city operating grid.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -60,12 +60,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
         <Kpi label="Total Violations" value={data.total_violations} subtext="All recorded cases" icon={<AlertTriangle size={18} />} tone="violation" />
         <Kpi label="Helmet Violations" value={data.helmet_violations} subtext="Non-compliance count" icon={<ShieldCheck size={18} />} tone="warning" />
         <Kpi label="Triple Riding" value={data.triple_riding_cases} subtext="Rule-based detection" icon={<Car size={18} />} tone="info" />
         <Kpi label="Compliance Rate" value={data.compliance_rate} decimals={1} suffix="%" subtext="Helmet adherence" icon={<FileCheck2 size={18} />} tone="success" />
         <Kpi label="Pending Reviews" value={data.pending_reviews} subtext="Evidence queue" icon={<ClipboardList size={18} />} tone="warning" />
+        <Kpi label="Rejected" value={data.rejected} subtext="Officer-cleared false positives" icon={<ShieldX size={18} />} tone="violation" />
         <Kpi label="Avg Confidence" value={data.average_confidence * 100} decimals={1} suffix="%" subtext="Detection reliability" icon={<Camera size={18} />} tone="primary" />
       </div>
 
@@ -75,11 +76,11 @@ export default function Dashboard() {
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={110} paddingAngle={2}>
                 {pieData.map((_, i) => (
-                  <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} stroke="#0f172a" strokeWidth={2} />
+                  <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} stroke="#ffffff" strokeWidth={2} />
                 ))}
               </Pie>
               <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#e5e7eb" }} />
+              <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#334155" }} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
@@ -90,24 +91,31 @@ export default function Dashboard() {
           ) : (
             <>
               <div className="text-center pb-2">
-                <div className="text-[12px] font-extrabold text-tv-muted tracking-wide">HIGHEST RISK CITY</div>
-                <div className="text-[28px] font-black text-white mt-2">
+                <div className="text-[12px] font-extrabold text-tv-muted tracking-wide">
+                  HIGHEST RISK CITY · {new Date().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                </div>
+                <div className="text-[28px] font-black text-tv-text mt-2">
                   {topCities[0].city} – {topCities[0].total} Violations
                 </div>
+                {topCities[0].last_violation_at && (
+                  <div className="text-tv-muted text-xs mt-1">
+                    Last violation: {new Date(topCities[0].last_violation_at).toLocaleString()}
+                  </div>
+                )}
               </div>
               <div className="tv-divider" />
               {topCities.map((c) => (
                 <div key={c.city} className="mt-3.5">
-                  <div className="flex justify-between text-[13px] font-extrabold text-white">
+                  <div className="flex justify-between text-[13px] font-extrabold text-tv-text">
                     <span>{c.city}</span>
                     <span>{c.total}</span>
                   </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden mt-1.5">
+                  <div className="h-2 bg-black/6 rounded-full overflow-hidden mt-1.5">
                     <div
                       className="h-full rounded-full"
                       style={{
                         width: `${(c.total / maxCity) * 100}%`,
-                        background: `linear-gradient(90deg, ${CHART_COLORS.violation}, rgba(255,255,255,0.2))`,
+                        background: `linear-gradient(90deg, ${CHART_COLORS.violation}, rgba(220,38,38,0.35))`,
                       }}
                     />
                   </div>
@@ -121,11 +129,11 @@ export default function Dashboard() {
       <Card title="Violation Trend Over Time">
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={data.trend}>
-            <CartesianGrid stroke="rgba(255,255,255,0.07)" />
+            <CartesianGrid stroke="rgba(15,23,42,0.08)" />
             <XAxis dataKey="date" tick={AXIS_STYLE} />
             <YAxis tick={AXIS_STYLE} />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#e5e7eb" }} />
+            <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#334155" }} />
             <Line type="monotone" dataKey="violations" stroke={CHART_COLORS.violation} strokeWidth={3} dot={{ r: 3 }} />
             <Line type="monotone" dataKey="reviewed" stroke={CHART_COLORS.success} strokeWidth={3} dot={{ r: 3 }} />
           </LineChart>
@@ -138,7 +146,7 @@ export default function Dashboard() {
           {data.recent.map((v) => (
             <div key={v.violation_id} className="tv-card p-3.5 flex justify-between gap-3 flex-wrap">
               <div className="min-w-[220px]">
-                <div className="font-black text-white text-[15px]">{v.violation_id}</div>
+                <div className="font-black text-tv-text text-[15px]">{v.violation_id}</div>
                 <div className="text-tv-muted text-[13px] font-semibold mt-1">Vehicle: {v.vehicle_number || "Unknown"}</div>
                 <div className="text-tv-muted text-[12px] mt-0.5">{v.violation_type}</div>
               </div>

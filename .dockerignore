@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+frontend/
+datasets/
+runs/
+colab/
+sample_images/
+reports/
+scripts/
+backend/storage/uploads/*
+backend/storage/evidence/*
+backend/storage/*.db
+.git/
+.DS_Store
+.vscode/
+.claude/

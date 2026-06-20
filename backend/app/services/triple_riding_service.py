@@ -53,7 +53,7 @@ def detect_triple_riding(detections: list[dict], postures: list[dict] | None = N
     """
     postures = postures or []
     motorcycles = [d for d in detections if d["category"] == "Two-Wheeler" and d["confidence"] >= TRIPLE_RIDING_MIN_CONFIDENCE]
-    persons = [d for d in detections if d["category"] == "Pedestrian / Rider"]
+    persons = [d for d in detections if d["category"] in ("Rider", "Pedestrian")]
 
     violations = []
     for moto in motorcycles:

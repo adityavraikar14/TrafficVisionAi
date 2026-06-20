@@ -47,7 +47,7 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} paddingAngle={2}>
-                {pieData.map((_, i) => <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} stroke="#0f172a" strokeWidth={2} />)}
+                {pieData.map((_, i) => <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} stroke="#ffffff" strokeWidth={2} />)}
               </Pie>
               <Tooltip contentStyle={TOOLTIP_STYLE} />
             </PieChart>
@@ -56,9 +56,9 @@ export default function Analytics() {
         <Card title="Category Insights">
           <div className="flex flex-col gap-2.5">
             {pieData.map((p) => (
-              <div key={p.name} className="flex justify-between items-center border-b border-white/5 py-2.5 last:border-0">
+              <div key={p.name} className="flex justify-between items-center border-b border-tv-border py-2.5 last:border-0">
                 <div>
-                  <div className="font-extrabold text-white text-sm">{p.name}</div>
+                  <div className="font-extrabold text-tv-text text-sm">{p.name}</div>
                   <div className="text-tv-muted text-xs mt-0.5">Share of total enforcement load</div>
                 </div>
                 <span className="tv-chip tv-chip--yellow">{p.value} Cases</span>
@@ -72,7 +72,7 @@ export default function Analytics() {
         <Card title="Traffic Violation Overview">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={barData}>
-              <CartesianGrid stroke="rgba(255,255,255,0.07)" />
+              <CartesianGrid stroke="rgba(15,23,42,0.08)" />
               <XAxis dataKey="name" tick={AXIS_STYLE} angle={-12} textAnchor="end" height={60} />
               <YAxis tick={AXIS_STYLE} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
@@ -85,7 +85,7 @@ export default function Analytics() {
         <Card title="Violation Trend Over Time">
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={data.trend}>
-              <CartesianGrid stroke="rgba(255,255,255,0.07)" />
+              <CartesianGrid stroke="rgba(15,23,42,0.08)" />
               <XAxis dataKey="date" tick={AXIS_STYLE} />
               <YAxis tick={AXIS_STYLE} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />

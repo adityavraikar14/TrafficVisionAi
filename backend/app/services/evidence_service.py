@@ -53,25 +53,44 @@ def create_violation_record(
         return dict(row)
 
 
+REPEAT_COUNT_SELECT = """
+    SELECT v.*, (
+        SELECT COUNT(*) FROM violations v2
+        WHERE v2.vehicle_number = v.vehicle_number
+          AND v.vehicle_number IS NOT NULL
+          AND v.vehicle_number != 'Not Clearly Visible'
+    ) AS repeat_count
+    FROM violations v
+"""
+
+
 def list_violations(search: str | None = None, limit: int = 200) -> list[dict]:
-    query = "SELECT * FROM violations"
+    query = REPEAT_COUNT_SELECT
     params: tuple = ()
     if search:
         like = f"%{search.lower()}%"
         query += """
-            WHERE lower(violation_id) LIKE ?
-               OR lower(vehicle_number) LIKE ?
-               OR lower(violation_type) LIKE ?
-               OR lower(city) LIKE ?
-               OR lower(status) LIKE ?
+            WHERE lower(v.violation_id) LIKE ?
+               OR lower(v.vehicle_number) LIKE ?
+               OR lower(v.violation_type) LIKE ?
+               OR lower(v.city) LIKE ?
+               OR lower(v.status) LIKE ?
         """
         params = (like, like, like, like, like)
-    query += " ORDER BY created_at DESC LIMIT ?"
+    query += " ORDER BY v.created_at DESC LIMIT ?"
     params = params + (limit,)
 
     with get_conn() as conn:
         rows = conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
+
+
+def get_violation(violation_id: str) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            REPEAT_COUNT_SELECT + " WHERE v.violation_id = ?", (violation_id,)
+        ).fetchone()
+        return dict(row) if row else None
 
 
 def update_status(violation_id: str, status: str) -> dict | None:

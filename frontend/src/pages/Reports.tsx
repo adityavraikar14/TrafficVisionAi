@@ -21,7 +21,7 @@ export default function Reports() {
           </p>
           <a
             href={exportReportUrl}
-            className="mt-4 inline-flex items-center gap-2 bg-gradient-to-br from-tv-primary/30 to-tv-primary/10 border border-tv-primary/40 text-white font-bold px-5 py-3 rounded-xl hover:-translate-y-0.5 transition"
+            className="mt-4 inline-flex items-center gap-2 bg-gradient-to-br from-tv-primary to-tv-primary/85 text-white font-bold px-5 py-3 rounded-xl hover:-translate-y-0.5 transition"
           >
             <FileDown size={18} /> Download CSV Report
           </a>
@@ -61,9 +61,9 @@ export default function Reports() {
 
 function Row({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
+    <div className="flex justify-between items-center py-2 border-b border-tv-border last:border-0">
       <span className="text-tv-muted font-semibold">{label}</span>
-      <span className="text-white font-black">{value}</span>
+      <span className="text-tv-text font-black">{value}</span>
     </div>
   );
 }

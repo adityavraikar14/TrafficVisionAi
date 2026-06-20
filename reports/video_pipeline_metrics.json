@@ -1,0 +1,12 @@
+{
+  "note": "Measured on a single real CPU run against sample_images/Video-418.mp4 \u2014 not averaged across multiple runs or hardware configs.",
+  "video_duration_sec": 32.8,
+  "frames_processed": 98,
+  "sample_fps_target": 3,
+  "inference_resolution_px": 480,
+  "total_processing_time_sec": 10.3,
+  "processing_to_video_ratio": 0.31,
+  "vehicles_tracked": 7,
+  "violations_found_at_0deg_reference": 4,
+  "hardware": "CPU (no GPU) \u2014 local machine"
+}

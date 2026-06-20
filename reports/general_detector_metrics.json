@@ -1,0 +1,17 @@
+{
+  "note": "Evaluated on COCO128 (subset of COCO val) \u2014 general-purpose accuracy, not traffic-camera-specific.",
+  "overall_precision": 0.7966,
+  "overall_recall": 0.6639,
+  "overall_f1": 0.7242,
+  "overall_map50": 0.7597,
+  "overall_map50_95": 0.5891,
+  "relevant_class_map50_95": {
+    "person": 0.6252,
+    "car": 0.2301,
+    "motorcycle": 0.7805,
+    "bus": 0.7208,
+    "truck": 0.324
+  },
+  "avg_inference_latency_ms": 152.2,
+  "throughput_images_per_sec": 6.57
+}

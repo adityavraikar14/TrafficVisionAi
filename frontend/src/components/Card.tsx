@@ -19,7 +19,7 @@ export default function Card({ title, badge, children, className = "" }: Props) 
       {title && (
         <>
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[15px] font-black text-white m-0">{title}</h3>
+            <h3 className="text-[15px] font-black text-tv-text m-0">{title}</h3>
             {badge && <span className="tv-chip tv-chip--yellow">{badge}</span>}
           </div>
           <div className="tv-divider" />

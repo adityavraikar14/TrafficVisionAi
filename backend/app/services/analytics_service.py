@@ -14,13 +14,14 @@ def summary() -> dict:
     pending = sum(1 for r in rows if r["status"] == "Pending Review")
     verified = sum(1 for r in rows if r["status"] == "Verified")
     escalated = sum(1 for r in rows if r["status"] == "Escalated")
+    rejected = sum(1 for r in rows if r["status"] == "Rejected")
     avg_conf = (sum(r["confidence"] for r in rows) / total) if total else 0.0
 
     by_type: dict = defaultdict(int)
     for r in rows:
         by_type[r["violation_type"]] += 1
 
-    by_city: dict = defaultdict(lambda: {"total": 0, "helmet": 0, "triple_riding": 0, "illegal_parking": 0})
+    by_city: dict = defaultdict(lambda: {"total": 0, "helmet": 0, "triple_riding": 0, "illegal_parking": 0, "last_violation_at": None})
     for r in rows:
         city = r["city"] or "Unknown"
         by_city[city]["total"] += 1
@@ -30,6 +31,8 @@ def summary() -> dict:
             by_city[city]["triple_riding"] += 1
         elif r["violation_type"] == "Illegal Parking":
             by_city[city]["illegal_parking"] += 1
+        if not by_city[city]["last_violation_at"] or r["created_at"] > by_city[city]["last_violation_at"]:
+            by_city[city]["last_violation_at"] = r["created_at"]
 
     city_breakdown = [
         {
@@ -38,6 +41,7 @@ def summary() -> dict:
             "helmet": stats["helmet"],
             "triple_riding": stats["triple_riding"],
             "illegal_parking": stats["illegal_parking"],
+            "last_violation_at": stats["last_violation_at"],
             "lat": next((r["lat"] for r in rows if r["city"] == city and r["lat"]), None),
             "lon": next((r["lon"] for r in rows if r["city"] == city and r["lon"]), None),
         }
@@ -55,6 +59,7 @@ def summary() -> dict:
         "pending_reviews": pending,
         "verified": verified,
         "escalated": escalated,
+        "rejected": rejected,
         "average_confidence": round(avg_conf, 4),
         "compliance_rate": round(100 - (helmet / total * 100), 1) if total else 100.0,
         "by_type": by_type,
@@ -78,7 +83,7 @@ def _trend(rows: list[dict], days: int) -> list[dict]:
             continue
         if d in buckets:
             buckets[d]["violations"] += 1
-            if r["status"] in ("Verified", "Escalated"):
+            if r["status"] in ("Verified", "Escalated", "Rejected"):
                 buckets[d]["reviewed"] += 1
 
     return list(buckets.values())

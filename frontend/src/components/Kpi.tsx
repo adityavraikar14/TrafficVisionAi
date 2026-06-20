@@ -26,11 +26,11 @@ export default function Kpi({ label, value, decimals = 0, suffix = "", subtext, 
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-extrabold uppercase tracking-wider text-tv-muted">{label}</div>
-          <div className="mt-2 text-[30px] font-black tracking-tight text-white">
+          <div className="mt-2 text-[30px] font-black tracking-tight text-tv-text">
             <CountUp value={value} decimals={decimals} suffix={suffix} />
           </div>
         </div>
-        <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-lg shrink-0">
+        <div className="w-10 h-10 rounded-2xl bg-black/5 border border-tv-border flex items-center justify-center text-lg shrink-0">
           {icon}
         </div>
       </div>

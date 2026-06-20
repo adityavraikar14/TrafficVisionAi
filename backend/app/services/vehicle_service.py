@@ -4,11 +4,20 @@ CATEGORY_MAP = {
     "car": "Car",
     "bus": "Bus",
     "truck": "Truck",
-    "person": "Pedestrian / Rider",
+    "person": "_person",  # refined into Rider / Pedestrian below
 }
 
 VEHICLE_MIN_CONFIDENCE = 0.35
 MERGE_CATEGORIES = {"Two-Wheeler", "Car", "Bus", "Truck"}
+RIDER_CONTAINMENT_THRESHOLD = 0.40
+RIDER_EXPAND_RATIO = 0.08
+
+# NOTE on "drivers": for cars/buses/trucks in third-person street-camera
+# footage, the driver is almost never a separately visible/detectable
+# person (occluded by the cabin/windshield) — so we don't attempt to label
+# a "Driver" category here. Auto-labeling anyone near a car as a driver
+# would mostly mislabel pedestrians and bystanders. Riders on two-wheelers
+# ARE visibly distinguishable from pedestrians, so that split is real.
 
 
 def _iou(a, b) -> float:
@@ -24,19 +33,24 @@ def _iou(a, b) -> float:
     return inter / (area_a + area_b - inter) if (area_a + area_b - inter) else 0.0
 
 
-def _close(a, b, gap_ratio: float = 0.12) -> bool:
-    """True if two boxes overlap at all, or sit close enough together that
-    they're almost certainly the same physical vehicle split into two
-    detections by occlusion (e.g. a rider's body covering the middle of a
-    scooter)."""
-    if _iou(a, b) > 0:
-        return True
-    ax1, ay1, ax2, ay2 = a
-    bx1, by1, bx2, by2 = b
-    gap_x = max(bx1 - ax2, ax1 - bx2, 0)
-    gap_y = max(by1 - ay2, ay1 - by2, 0)
-    scale = max(ax2 - ax1, ay2 - ay1, bx2 - bx1, by2 - by1)
-    return gap_x < scale * gap_ratio and gap_y < scale * gap_ratio
+MERGE_MIN_IOU = 0.05
+
+
+def _close(a, b) -> bool:
+    """True only if two boxes genuinely overlap — the signature of one
+    physical vehicle split into two detections by occlusion (e.g. a
+    rider's body covering the middle of a scooter; the two visible
+    fragments still overlap at that point).
+
+    Deliberately does NOT treat "merely nearby" as close: in a dense
+    parking row, every distinct vehicle sits close to its neighbor, and
+    a proximity-based rule chains them all into one nonsensical mega-box
+    (verified directly: this previously merged ~5 separately-parked
+    motorcycles into a single fake "vehicle," which then triggered a
+    false Triple Riding violation on pedestrians walking past). Requiring
+    real overlap avoids that failure mode while still catching the
+    one-vehicle-split-by-occlusion case, which does overlap."""
+    return _iou(a, b) > MERGE_MIN_IOU
 
 
 def _merge_category(dets: list[dict]) -> list[dict]:
@@ -73,6 +87,38 @@ def _merge_category(dets: list[dict]) -> list[dict]:
     return merged
 
 
+def _horizontal_containment(person_box, vehicle_box) -> float:
+    px1, _, px2, _ = person_box
+    vx1, _, vx2, _ = vehicle_box
+    w = vx2 - vx1
+    vx1 -= w * RIDER_EXPAND_RATIO
+    vx2 += w * RIDER_EXPAND_RATIO
+    overlap = max(0.0, min(px2, vx2) - max(px1, vx1))
+    person_width = px2 - px1
+    return overlap / person_width if person_width else 0.0
+
+
+def _vertical_overlap(person_box, vehicle_box) -> bool:
+    _, py1, _, py2 = person_box
+    _, vy1, _, vy2 = vehicle_box
+    return py1 <= vy2 and py2 >= vy1
+
+
+def _refine_person_categories(detections: list[dict]) -> None:
+    """Split the generic '_person' detections into Rider (overlapping a
+    two-wheeler) vs Pedestrian (everyone else). Mutates in place."""
+    two_wheelers = [d for d in detections if d["category"] == "Two-Wheeler"]
+    for det in detections:
+        if det["category"] != "_person":
+            continue
+        is_rider = any(
+            _vertical_overlap(det["box"], moto["box"])
+            and _horizontal_containment(det["box"], moto["box"]) >= RIDER_CONTAINMENT_THRESHOLD
+            for moto in two_wheelers
+        )
+        det["category"] = "Rider" if is_rider else "Pedestrian"
+
+
 def classify_frame(model, results) -> dict:
     """Classify every detection from the stock COCO model into the road-user
     categories the problem statement asks for (vehicles, riders, pedestrians),
@@ -100,13 +146,17 @@ def classify_frame(model, results) -> dict:
         )
 
     detections = []
-    counts: dict = {}
     for category, dets in by_category.items():
         merged = _merge_category(dets) if category in MERGE_CATEGORIES else dets
         detections.extend(merged)
-        counts[category] = len(merged)
 
-    vehicles_detected = sum(v for k, v in counts.items() if k != "Pedestrian / Rider")
+    _refine_person_categories(detections)
+
+    counts: dict = {}
+    for det in detections:
+        counts[det["category"]] = counts.get(det["category"], 0) + 1
+
+    vehicles_detected = sum(v for k, v in counts.items() if k in MERGE_CATEGORIES)
 
     return {
         "detections": detections,

@@ -1,0 +1,12 @@
+{
+  "note": "Evaluated on COCO8-pose \u2014 general keypoint accuracy, not our seated/standing heuristic specifically.",
+  "person_detection_precision": 0.9257,
+  "person_detection_recall": 0.8913,
+  "person_detection_map50": 0.9074,
+  "keypoint_precision": 0.8475,
+  "keypoint_recall": 0.5,
+  "keypoint_map50": 0.5348,
+  "keypoint_map50_95": 0.3521,
+  "avg_inference_latency_ms": 76.89,
+  "throughput_images_per_sec": 13.01
+}

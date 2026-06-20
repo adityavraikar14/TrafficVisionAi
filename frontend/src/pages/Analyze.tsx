@@ -4,7 +4,7 @@ import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Kpi from "../components/Kpi";
 import { Chip, StatusChip, formatConfidence } from "../components/Chip";
-import { analyzeImage, type DetectionResponse, type ZoneCalibration } from "../api/client";
+import { analyzeImage, mediaUrl, type DetectionResponse, type ZoneCalibration } from "../api/client";
 
 const DEFAULT_ZONES: ZoneCalibration = {
   enableSignalZone: false,
@@ -51,7 +51,7 @@ export default function Analyze() {
     <Layout title="🔍 Live Detection" subtitle="AI-powered violation detection and evidence-grade record">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-xl font-black text-white">Detection Console</div>
+          <div className="text-xl font-black text-tv-text">Detection Console</div>
           <p className="text-tv-muted text-sm mt-1">Upload a traffic image to run helmet, triple-riding, red-light/stop-line, and illegal-parking detection.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -73,7 +73,7 @@ export default function Analyze() {
           className="border border-dashed border-tv-primary/35 bg-tv-bg-soft/60 rounded-2xl py-10 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-tv-primary/60 transition"
         >
           <UploadCloud size={32} className="text-tv-primary" />
-          <div className="font-bold text-white">Click or drop a traffic image (JPG / PNG)</div>
+          <div className="font-bold text-tv-text">Click or drop a traffic image (JPG / PNG)</div>
           <div className="text-tv-muted text-sm">Runs locally against your FastAPI detection backend</div>
           <input
             ref={inputRef}
@@ -96,7 +96,7 @@ export default function Analyze() {
             triple-riding detection.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="relative rounded-xl overflow-hidden border border-white/10">
+            <div className="relative rounded-xl overflow-hidden border border-tv-border">
               <img src={preview} className="w-full h-auto block" />
               {zones.enableSignalZone && (
                 <div
@@ -123,7 +123,7 @@ export default function Analyze() {
 
             <div className="flex flex-col gap-5">
               <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-white cursor-pointer">
+                <label className="flex items-center gap-2 text-sm font-bold text-tv-text cursor-pointer">
                   <input
                     type="checkbox"
                     checked={zones.enableSignalZone}
@@ -148,7 +148,7 @@ export default function Analyze() {
                       <select
                         value={zones.signalState}
                         onChange={(e) => setZones({ ...zones, signalState: e.target.value as ZoneCalibration["signalState"] })}
-                        className="bg-tv-bg-soft border border-tv-border rounded-lg px-2 py-1 text-sm text-white"
+                        className="bg-tv-bg-soft border border-tv-border rounded-lg px-2 py-1 text-sm text-tv-text"
                       >
                         <option value="red">Red</option>
                         <option value="yellow">Yellow</option>
@@ -160,7 +160,7 @@ export default function Analyze() {
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-white cursor-pointer">
+                <label className="flex items-center gap-2 text-sm font-bold text-tv-text cursor-pointer">
                   <input
                     type="checkbox"
                     checked={zones.enableParkingZone}
@@ -197,9 +197,9 @@ export default function Analyze() {
           </Card>
           <Card title="Detection Result">
             {result ? (
-              <img src={result.annotated_image_url} className="rounded-xl w-full object-contain max-h-[420px]" />
+              <img src={mediaUrl(result.annotated_image_url)} className="rounded-xl w-full object-contain max-h-[420px]" />
             ) : (
-              <div className="border border-dashed border-white/15 rounded-2xl py-16 text-center text-tv-muted font-semibold">
+              <div className="border border-dashed border-tv-border rounded-2xl py-16 text-center text-tv-muted font-semibold">
                 {loading ? "Analyzing image…" : "Run AI Analysis to see detection output"}
               </div>
             )}
@@ -211,7 +211,7 @@ export default function Analyze() {
         <button
           onClick={runAnalysis}
           disabled={loading}
-          className="self-start flex items-center gap-2 bg-gradient-to-br from-tv-primary/30 to-tv-primary/10 border border-tv-primary/40 text-white font-bold px-5 py-3 rounded-xl hover:-translate-y-0.5 transition disabled:opacity-60"
+          className="self-start flex items-center gap-2 bg-gradient-to-br from-tv-primary to-tv-primary/85 text-white font-bold px-5 py-3 rounded-xl hover:-translate-y-0.5 transition disabled:opacity-60"
         >
           <ScanSearch size={18} />
           {loading ? "Analyzing…" : "Run AI Analysis"}
@@ -249,12 +249,16 @@ export default function Analyze() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Card title="Image Preprocessing">
               <div className="flex flex-col gap-2 text-sm">
+                <PreRow label="Shadow removal (illumination normalization)" active={result.preprocessing.shadow_correction} />
                 <PreRow label="Low-light correction (CLAHE)" active={result.preprocessing.low_light_correction} />
-                <PreRow label="Denoise (rain / sensor speckle)" active={result.preprocessing.denoise_applied} />
-                <PreRow label="Motion-blur sharpening" active={result.preprocessing.motion_blur_correction} />
-                <div className="flex justify-between text-tv-muted text-xs mt-2 pt-2 border-t border-white/5">
-                  <span>Brightness score: {result.preprocessing.brightness_score}</span>
-                  <span>Sharpness score: {result.preprocessing.sharpness_score}</span>
+                <PreRow label="Rain streak attenuation (directional morphology)" active={result.preprocessing.rain_correction} />
+                <PreRow label="Denoise (bilateral filter)" active={result.preprocessing.denoise_applied} />
+                <PreRow label="Motion-blur correction (Wiener deconvolution)" active={result.preprocessing.motion_blur_correction} />
+                <div className="grid grid-cols-2 gap-1 text-tv-muted text-xs mt-2 pt-2 border-t border-tv-border">
+                  <span>Brightness: {result.preprocessing.brightness_score}</span>
+                  <span>Sharpness: {result.preprocessing.sharpness_score}</span>
+                  <span>Shadow spread: {result.preprocessing.shadow_spread_score}</span>
+                  <span>Rain streak density: {result.preprocessing.rain_streak_score}</span>
                 </div>
               </div>
             </Card>
@@ -264,8 +268,8 @@ export default function Analyze() {
               ) : (
                 <div className="flex flex-col gap-2">
                   {Object.entries(result.road_users.counts).map(([cat, count]) => (
-                    <div key={cat} className="flex justify-between text-sm border-b border-white/5 py-1.5 last:border-0">
-                      <span className="text-white font-semibold">{cat}</span>
+                    <div key={cat} className="flex justify-between text-sm border-b border-tv-border py-1.5 last:border-0">
+                      <span className="text-tv-text font-semibold">{cat}</span>
                       <span className="tv-chip tv-chip--blue">{count}</span>
                     </div>
                   ))}
@@ -277,23 +281,27 @@ export default function Analyze() {
           {result.is_compliant ? (
             <Card title="Compliance Result">
               <Chip text="Compliant" variant="green" />
-              <div className="mt-3 text-white/85 font-semibold">✅ No violations found in this image.</div>
+              <div className="mt-3 text-tv-text/85 font-semibold">✅ No violations found in this image.</div>
             </Card>
           ) : (
             <Card title="Digital Evidence Cards" badge={`${result.violations.length} Found`}>
               <div className="flex flex-col gap-3">
                 {result.violations.map((v) => (
                   <div key={v.violation_id} className="border border-tv-violation/25 bg-tv-violation/5 rounded-2xl p-4 grid grid-cols-2 gap-3">
+                    <div className="col-span-2 flex items-center justify-between">
+                      <span className="font-black text-tv-text text-sm">{v.violation_id}</span>
+                      <span className="text-tv-muted text-xs">Recorded — see Evidence Center to review</span>
+                    </div>
                     <div>
-                      <div className="font-black text-white text-sm">Vehicle Number</div>
+                      <div className="font-black text-tv-text text-sm">Vehicle Number</div>
                       <div className="text-tv-muted text-sm mt-1">{v.vehicle_number}</div>
                     </div>
                     <div>
-                      <div className="font-black text-white text-sm">Confidence</div>
+                      <div className="font-black text-tv-text text-sm">Confidence</div>
                       <div className="text-tv-muted text-sm mt-1">{formatConfidence(v.confidence)}</div>
                     </div>
                     <div>
-                      <div className="font-black text-white text-sm">Violation Type</div>
+                      <div className="font-black text-tv-text text-sm">Violation Type</div>
                       <div className="text-tv-muted text-sm mt-1">{v.violation_type}</div>
                     </div>
                     <div className="flex items-end">
