@@ -35,3 +35,14 @@ def on_startup():
 @app.get("/api/health")
 def health():
     return {"status": "ok", "service": "TrafficVision AI backend"}
+
+
+@app.get("/")
+def root():
+    return {
+        "service": "TrafficVision AI backend",
+        "status": "running",
+        "note": "This is the API server. The web app is the separately-deployed frontend.",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
