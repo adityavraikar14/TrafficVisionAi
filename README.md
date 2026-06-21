@@ -60,34 +60,47 @@ seated-rider check → triple-riding / stop-line / red-light / illegal-parking
 rules → CV-based plate localization + OCR → annotated evidence image →
 SQLite record → REST API → React dashboards`
 
-## Running locally
+## Running locally (after cloning this repo)
 
-Two servers, run in separate terminals.
+### Prerequisites
+- **Python 3.11** (3.9–3.12 also work)
+- **Node.js 18+** and npm
+- **ffmpeg** on your system `PATH` — needed for the Instant Replay (stunt-detection video clip) feature
+  - Windows: `winget install Gyan.FFmpeg`
+  - macOS: `brew install ffmpeg`
+  - Linux: `sudo apt install ffmpeg`
+- **Git LFS** — this repo's model weights (`models/*.pt`) and sample media (`sample_images/`) are tracked via Git LFS. Install it once before cloning: https://git-lfs.com, then `git lfs install`. If you already cloned without it, run `git lfs pull` inside the repo afterward.
 
-**Backend** (FastAPI, port 8000):
+### 1. Clone
+```
+git clone https://github.com/adityavraikar14/TrafficVisionAi.git
+cd TrafficVisionAi
+```
+
+### 2. Backend (FastAPI, port 8000) — first terminal
 ```
 cd backend
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS/Linux
 pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
-or just double-click `backend/run.bat` on Windows.
+The first request after startup is slow (loading 5 YOLOv8 models + EasyOCR into memory); everything after that is fast.
 
-**Frontend** (Vite dev server, port 5173):
+### 3. Frontend (Vite dev server, port 5173) — second terminal
 ```
 cd frontend
 npm install
 npm run dev
 ```
-or double-click `frontend/run.bat`.
 
-Then open **http://localhost:5173**. The Vite dev server proxies `/api`
-and `/storage` requests to the backend automatically (see
-`frontend/vite.config.ts`).
+### 4. Open it
+Go to **http://localhost:5173** — the Vite dev server automatically proxies `/api` and `/storage` requests to the backend (see `frontend/vite.config.ts`), so no extra config is needed.
 
-The database seeds itself with 14 days of demo violation data on first
-run (`backend/app/core/db.py`) so the dashboards aren't empty before you
-upload your first real image. Every image you analyze on the **Live
-Detection** page adds real records on top of that seed data.
+**Login**: `officer1` / `TrafficPolice@123`
+
+The database seeds itself with demo violation data on first run (`backend/app/core/db.py`) so the dashboards aren't empty before you upload anything. Try **Live Detection** with a photo from `sample_images/`, or **Wrong-Side Driving** with `sample_images/stunt-video.mp4` to see Instant Replay.
 
 ## What's real vs. roadmap
 
